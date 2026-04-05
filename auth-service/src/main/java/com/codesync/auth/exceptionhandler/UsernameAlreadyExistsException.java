@@ -1,0 +1,8 @@
+package com.codesync.auth.exceptionhandler;
+
+
+public class UsernameAlreadyExistsException extends RuntimeException {
+    public UsernameAlreadyExistsException(String message) {
+        super(message);
+    }
+}
