@@ -1,0 +1,36 @@
+/.metadata/
+# ==========================================
+# auth-service — CodeSync
+# ==========================================
+
+# ----- NEVER COMMIT — secrets -----
+.env
+.env.*
+
+# ----- Maven build output -----
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ----- Maven wrapper jar -----
+.mvn/wrapper/maven-wrapper.jar
+
+# ----- Spring Boot generated -----
+HELP.md
+
+# ----- Eclipse / STS (your IDE) -----
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+.apt_generated
+
+# ----- OS -----
+.DS_Store
+Thumbs.db
+
+# ----- Logs -----
+*.log
+logs/
