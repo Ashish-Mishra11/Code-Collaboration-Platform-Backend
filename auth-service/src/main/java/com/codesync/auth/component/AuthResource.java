@@ -3,6 +3,7 @@ package com.codesync.auth.component;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.codesync.auth.dto.ChangePasswordDto;
@@ -18,30 +20,48 @@ import com.codesync.auth.dto.RegisterResponseDto;
 import com.codesync.auth.dto.RegisterUserDto;
 import com.codesync.auth.dto.UpdateUserProfileDto;
 import com.codesync.auth.dto.UserProfileDto;
+import com.codesync.auth.entity.PasswordResetToken;
 import com.codesync.auth.entity.User;
 import com.codesync.auth.service.AuthService;
+import com.codesync.auth.service.implementation.PasswordResetService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthResource {
 
 	private AuthService authService;
+	private final PasswordResetService passwordResetService;
 	
-	public AuthResource(AuthService authService) {
+	public AuthResource(AuthService authService ,PasswordResetService passwordResetService) {
 		this.authService=authService;
+		this.passwordResetService=passwordResetService;
 	}
 	
     // ---------------- REGISTER ----------------
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponseDto> register(@RequestBody RegisterUserDto registerUserDto) {
+    public ResponseEntity<RegisterResponseDto> register(@Valid @RequestBody RegisterUserDto registerUserDto) {
     	return ResponseEntity.ok(authService.register(registerUserDto));
     	
     }
     // ---------------- LOGIN ----------------
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginUserDto loginUserDto) {
+    public ResponseEntity<String> login( @Valid @RequestBody LoginUserDto loginUserDto) {
+    	System.out.println("Logining taking place");
     	return ResponseEntity.ok(authService.login(loginUserDto.getUserName(),loginUserDto.getPassword()));
     	
+    }
+ // ---------------- GET USER ID BY USERNAME (NEW - For Microservices) ----------------
+    @GetMapping("/users/by-username")
+    public ResponseEntity<Long> getUserIdByUsername(@RequestParam("username") String username) {
+        Integer userId = authService.getUserIdByUsername(username);
+        
+        if (userId == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        return ResponseEntity.ok(userId.longValue());
     }
     
     // ---------------- LOGOUT ----------------
@@ -84,6 +104,28 @@ public class AuthResource {
 
         authService.changePassword(userId, dto);
 
+        return ResponseEntity.ok("Password updated successfully");
+    }
+    
+ // ---------------- FORGOT PASSWORD ----------------
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> body) {
+        passwordResetService.forgotPassword(body.get("email"));
+        return ResponseEntity.ok("If that email exists, a reset link has been sent");
+    }
+
+    // ---------------- RESET PASSWORD ----------------
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(
+            @RequestParam String token,
+            @RequestBody Map<String, String> body) {
+
+        PasswordResetToken resetToken = passwordResetService.validateAndFetch(token);
+
+        User user = resetToken.getUser();
+        user.setPasswordHash(new BCryptPasswordEncoder(12).encode(body.get("password")));
+        // save back through AuthService or directly — simplest approach:
+        passwordResetService.deleteToken(resetToken); // consume the token first
         return ResponseEntity.ok("Password updated successfully");
     }
     

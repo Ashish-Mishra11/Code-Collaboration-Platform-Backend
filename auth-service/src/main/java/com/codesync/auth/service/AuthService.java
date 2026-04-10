@@ -14,6 +14,7 @@ public interface AuthService {
 
 
 	RegisterResponseDto register(RegisterUserDto registerUserDto);
+	Integer getUserIdByUsername(String username);
 
     String login(String userName, String password);
 

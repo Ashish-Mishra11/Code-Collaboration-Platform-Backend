@@ -90,17 +90,28 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public String login(String userName, String password) {
 		// TODO Auto-generated method stub
+		System.out.println("Inside login service auth mai");
 		Authentication authentication = authenticationManager
 				.authenticate(new UsernamePasswordAuthenticationToken(userName, password));
 
-		if(authentication.isAuthenticated())
-			return jwtService.generateToken(userName);
-		else
+		if(authentication.isAuthenticated()) {
+			System.out.println("Inside login service auth mai part 2");
+			User user = userRepository.findByUserName(userName).orElseThrow(()->new UserNotFoundException("User not found exception"));
+			return jwtService.generateToken(user);}
+		else {
 			return "Login Failed";
+		}
 		
 	
 	}
 
+	//forprojectmicroservice 
+	@Override
+	public Integer getUserIdByUsername(String username) {
+	    return userRepository.findByUserName(username)
+	            .map(User::getUserId)
+	            .orElse(null);
+	}
 	//Logout
 	//it is kept if we have to blackList some user then we can store the token in db and then do the coding to remove them here
 	@Override
@@ -117,15 +128,16 @@ public class AuthServiceImpl implements AuthService {
 	    token = token.substring(7);
 
 	    //  Extract userId (subject)
-	    String userId = jwtService.extractUserName(token);
+	    String userName = jwtService.extractUserName(token);
+	    User orElseThrow = userRepository.findByUserName(userName).orElseThrow(()->new UserNotFoundException("User not found refresh token "));
 
 	    //  Validate token (important)
-	    if (!jwtService.isTokenValid(token, userId)) {
+	    if (!jwtService.isTokenValid(token, userName)) {
 	        throw new RuntimeException("Invalid or expired token");
 	    }
 
 	    //  Generate new token
-	    return jwtService.generateToken(userId);
+	    return jwtService.generateToken(orElseThrow);
 	}
 	
 	//Get profile

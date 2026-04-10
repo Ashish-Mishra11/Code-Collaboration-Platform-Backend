@@ -51,11 +51,11 @@ public class SecurityConfig {
 
 		http.csrf(customizer -> customizer.disable())
 				.authorizeHttpRequests(request -> request
-						.requestMatchers("/api/auth/register", "/api/auth/login","/oauth2/**","/login/oauth2/**")
-						
+						.requestMatchers("/api/auth/register","/api/auth/forgot-password","/api/auth/reset-password", "/api/auth/login","/oauth2/**","/login/oauth2/**")
+//						.requestMatchers("/**")
 						.permitAll()
 						.anyRequest().authenticated())
-				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				// OAuth2 Login Configuration
 	            .oauth2Login(oauth2 -> oauth2
 	                .successHandler((request, response, authentication) -> {

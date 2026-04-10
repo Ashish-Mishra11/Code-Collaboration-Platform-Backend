@@ -58,7 +58,7 @@ public class GitHubOAuthSuccessHandler implements AuthenticationSuccessHandler {
 
         
         //generating jwt using userID
-        String jwt = jwtService.generateToken(user.getUserId().toString());
+        String jwt = jwtService.generateToken(user);
 
         // Redirect to frontend with token as query param
         // Change this URL to wherever your frontend lives

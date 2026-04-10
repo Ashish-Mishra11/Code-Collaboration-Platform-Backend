@@ -5,11 +5,17 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.codesync.auth.entity.User;
+
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -21,43 +27,49 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final String SECRET = "TmV3U2VjcmV0S2V5Rm9ySldUU2lnbmluZ1B1cnBvc2VzMTIzNDU2Nzg=\r\n";
+//    private static final String SECRET = "TmV3U2VjcmV0S2V5Rm9ySldUU2lnbmluZ1B1cnBvc2VzMTIzNDU2Nzg=\r\n";
 
+    @Value("${jwt.secret}")
     private String secretKey;
 
-    public JwtService(){
-        secretKey = generateSecretKey();
-    }
+//    public JwtService(){
+//        secretKey = SECRET;
+//    }
 
-    public String generateSecretKey() {
-        try {
-            KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-            SecretKey secretKey = keyGen.generateKey();
-            System.out.println("Secret Key : " + secretKey.toString());
-            return Base64.getEncoder().encodeToString(secretKey.getEncoded());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error generating secret key", e);
-        }
-    }
+//    public String generateSecretKey() {
+//        try {
+//            KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
+//            SecretKey secretKey = keyGen.generateKey();
+//            System.out.println("Secret Key : " + secretKey.toString());
+//            return Base64.getEncoder().encodeToString(secretKey.getEncoded());
+//        } catch (NoSuchAlgorithmException e) {
+//            throw new RuntimeException("Error generating secret key", e);
+//        }
+//    }
 
-    public String generateToken(String username) {
-
+    public String generateToken(User user) {
+        
         Map<String, Object> claims = new HashMap<>();
+        
+        claims.put("userId", user.getUserId());                // Most important - immutable
+        claims.put("userName", user.getUserName());            // Good to have
+        claims.put("email", user.getEmail());
+        claims.put("role", user.getRole());                    // Very useful for RBAC(Role based access control)
+        claims.put("provider", user.getProvider());
 
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(username)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000*60*30))
-                .signWith(getKey(), SignatureAlgorithm.HS256).compact();
-
+                .setSubject(user.getUserName())       // ← Subject = userId (best practice)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 hours example
+                .signWith(getKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     private Key getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+        // Use plain text secret (same as Gateway)
+        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
-
     public String extractUserName(String token) {
         // extract the username from jwt token
         return extractClaim(token, Claims::getSubject);
@@ -80,11 +92,11 @@ public class JwtService {
         return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    public boolean isTokenValid(String token, String userId) {
+    public boolean isTokenValid(String token, String username) {
 
-        final String extractedUserId = extractUsername(token);
+        final String extractedUserName = extractUsername(token);
 
-        return (extractedUserId.equals(userId) && !isTokenExpired(token));
+        return (extractedUserName.equals(username) && !isTokenExpired(token));
     }
     
     public String extractUsername(String token) {

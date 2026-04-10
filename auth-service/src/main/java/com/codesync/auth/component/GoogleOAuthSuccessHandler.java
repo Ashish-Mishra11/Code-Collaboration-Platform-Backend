@@ -57,9 +57,9 @@ public class GoogleOAuthSuccessHandler implements AuthenticationSuccessHandler {
         });
 
         // Generate JWT token using userID
-        String jwt = jwtService.generateToken(user.getUserId().toString());
+        String jwt = jwtService.generateToken(user);
 
-        // Return JSON response with token (Best practice for SPA/frontend)
+        // Return JSON response with token 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
