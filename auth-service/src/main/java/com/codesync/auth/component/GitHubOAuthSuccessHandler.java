@@ -11,6 +11,8 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @Component
@@ -49,7 +51,7 @@ public class GitHubOAuthSuccessHandler implements AuthenticationSuccessHandler {
             newUser.setFullName(name);
             newUser.setAvatarUrl(avatar);
             newUser.setProvider("GITHUB");
-            newUser.setRole("DEVELOPER");
+            newUser.setRole("USER");
             newUser.setIsActive(true);
             newUser.setCreateAt(LocalDateTime.now());
             // passwordHash left null — GitHub users won't use local login
@@ -63,16 +65,12 @@ public class GitHubOAuthSuccessHandler implements AuthenticationSuccessHandler {
         // Redirect to frontend with token as query param
         // Change this URL to wherever your frontend lives
         // ✅ Return token as JSON (instead of redirect)
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+     // GitHubOAuthSuccessHandler.java  
+        String frontendUrl = "http://localhost:3002/login"
+                + "?token=" + jwt
+                + "&provider=GITHUB"
+                + "&username=" + URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8);
 
-        String jsonResponse = String.format(
-        		 "{\"token\": \"%s\", \"username\": \"%s\", \"provider\": \"GITHUB\"}",
-            jwt,
-            user.getEmail()
-        );
-
-        response.getWriter().write(jsonResponse);
-        response.getWriter().flush();
+        response.sendRedirect(frontendUrl);
     }
 }

@@ -31,10 +31,16 @@ public class GlobalSecurityConfiguration implements GlobalFilter, Ordered {
     }
 
     private static final List<String> PUBLIC_PATHS = List.of(
-            "/api/auth/login",
-            "/api/auth/register",
-            "/api/auth/forgot-password",
-            "/api/auth/reset-password"
+            "/api/auth/login"
+            ,"/api/auth/register"
+            ,"/api/auth/forgot-password"
+            ,"/api/auth/reset-password"
+			,"/oauth2/**"
+			,"/login/oauth2/**"
+			,"/api/auth/register/dev"
+			,"/api/auth/admin/approve"
+			,"/api/auth/admin/reject"
+			,"/api/auth/approvedeveloper"
     );
 
     @Override

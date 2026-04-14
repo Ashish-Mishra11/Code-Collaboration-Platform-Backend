@@ -51,7 +51,16 @@ public class SecurityConfig {
 
 		http.csrf(customizer -> customizer.disable())
 				.authorizeHttpRequests(request -> request
-						.requestMatchers("/api/auth/register","/api/auth/forgot-password","/api/auth/reset-password", "/api/auth/login","/oauth2/**","/login/oauth2/**")
+						.requestMatchers("/api/auth/register"
+								,"/api/auth/forgot-password"
+								,"/api/auth/reset-password"
+								, "/api/auth/login"
+								,"/oauth2/**"
+								,"/login/oauth2/**"
+								,"/api/auth/register/dev"
+								,"/api/auth/admin/approve"
+								,"/api/auth/admin/reject"
+								,"/api/auth/approvedeveloper")
 //						.requestMatchers("/**")
 						.permitAll()
 						.anyRequest().authenticated())

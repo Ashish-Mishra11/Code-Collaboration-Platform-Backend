@@ -22,6 +22,7 @@ import com.codesync.auth.entity.User;
 import com.codesync.auth.exceptionhandler.EmailAlreadyExistsException;
 import com.codesync.auth.exceptionhandler.UserNotFoundException;
 import com.codesync.auth.exceptionhandler.UsernameAlreadyExistsException;
+import com.codesync.auth.repository.DeveloperApplication;
 import com.codesync.auth.repository.UserRepository;
 import com.codesync.auth.service.AuthService;
 
@@ -43,6 +44,8 @@ public class AuthServiceImpl implements AuthService {
 	@Autowired
 	private ModelMapper modelMapper;
 	
+	@Autowired
+	private DeveloperApplication developerApplication;
 
 	//Register
 	@Override
@@ -68,7 +71,11 @@ public class AuthServiceImpl implements AuthService {
 	    user.setPasswordHash(encoder.encode(registerUserDto.getPassword()));
 	    
 	    // 5. Set system-controlled fields
-	    user.setRole("DEVELOPER");     // default role
+	    if(developerApplication.findByEmail(registerUserDto.getEmail()).isPresent()) {
+	    	user.setRole("DEVElOPER");
+	    }else {
+	    user.setRole("USER");    
+	    }
 	    user.setProvider("LOCAL");
 	    user.setIsActive(true);
 	    user.setCreateAt(LocalDateTime.now());
@@ -105,13 +112,14 @@ public class AuthServiceImpl implements AuthService {
 	
 	}
 
-	//forprojectmicroservice 
+	//for project microservice 
 	@Override
 	public Integer getUserIdByUsername(String username) {
 	    return userRepository.findByUserName(username)
 	            .map(User::getUserId)
 	            .orElse(null);
 	}
+	
 	//Logout
 	//it is kept if we have to blackList some user then we can store the token in db and then do the coding to remove them here
 	@Override

@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,13 +17,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.codesync.auth.dto.ChangePasswordDto;
 import com.codesync.auth.dto.LoginUserDto;
+import com.codesync.auth.dto.RegisterDeveloperDto;
 import com.codesync.auth.dto.RegisterResponseDto;
 import com.codesync.auth.dto.RegisterUserDto;
 import com.codesync.auth.dto.UpdateUserProfileDto;
 import com.codesync.auth.dto.UserProfileDto;
 import com.codesync.auth.entity.PasswordResetToken;
 import com.codesync.auth.entity.User;
+import com.codesync.auth.repository.UserRepository;
 import com.codesync.auth.service.AuthService;
+import com.codesync.auth.service.implementation.DeveloperRoleService;
 import com.codesync.auth.service.implementation.PasswordResetService;
 
 import jakarta.validation.Valid;
@@ -31,21 +35,53 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/auth")
 public class AuthResource {
 
+    private final UserRepository userRepository;
+
 	private AuthService authService;
+	private DeveloperRoleService developerRoleService;
 	private final PasswordResetService passwordResetService;
 	
-	public AuthResource(AuthService authService ,PasswordResetService passwordResetService) {
+	public AuthResource(AuthService authService ,PasswordResetService passwordResetService, UserRepository userRepository,DeveloperRoleService developerRoleService) {
 		this.authService=authService;
 		this.passwordResetService=passwordResetService;
+		this.userRepository = userRepository;
+		this.developerRoleService=developerRoleService;
 	}
 	
+	
+	//------------------REGISTER for developer-------
+	@PostMapping("/register/dev")
+	public ResponseEntity<String> registerDeveloper(@ModelAttribute RegisterDeveloperDto registerDeveloperDto){
+		System.out.println("inside the register developer controllers initial step");
+		return ResponseEntity.ok(developerRoleService.registerDeveloperApplications(registerDeveloperDto));
+	}
+	
+	//Approval for developer application via mail from admin to developer
+	@PostMapping("/admin/approve")
+	public ResponseEntity<String> SendMailToApprovedDeveloper(@RequestParam String email){
+		return ResponseEntity.ok(developerRoleService.generateMailToDeveloper(email));
+	}
+	//rejection from admin via mail
+	@PostMapping("/admin/reject")
+	public ResponseEntity<String> deleteDeveloperDetails(@RequestParam String email){
+		return ResponseEntity.ok(developerRoleService.rejectHandler(email));
+	}
+	
+	//Approved developer registering themselves into the codesync 
+	@PostMapping("/approvedeveloper")
+	public ResponseEntity<RegisterResponseDto> registerApprovedDeveloper(@RequestParam String email, @RequestBody RegisterUserDto registerUserDto){
+		return ResponseEntity.ok(authService.register(registerUserDto));
+		
+	}
     // ---------------- REGISTER ----------------
+	// for normal user
     @PostMapping("/register")
     public ResponseEntity<RegisterResponseDto> register(@Valid @RequestBody RegisterUserDto registerUserDto) {
     	return ResponseEntity.ok(authService.register(registerUserDto));
     	
     }
     // ---------------- LOGIN ----------------
+    // for normal developer
     @PostMapping("/login")
     public ResponseEntity<String> login( @Valid @RequestBody LoginUserDto loginUserDto) {
     	System.out.println("Logining taking place");
