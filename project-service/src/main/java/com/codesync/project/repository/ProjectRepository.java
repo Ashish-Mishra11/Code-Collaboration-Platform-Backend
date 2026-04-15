@@ -20,4 +20,5 @@ public interface ProjectRepository extends JpaRepository<Project, Integer> {
 
     List<Project> findByIsArchived(Boolean isArchived);
     Integer countByOwnerId(Integer ownerId);
+    
 }

@@ -91,7 +91,9 @@ public class AuthResource {
  // ---------------- GET USER ID BY USERNAME (NEW - For Microservices) ----------------
     @GetMapping("/users/by-username")
     public ResponseEntity<Long> getUserIdByUsername(@RequestParam("username") String username) {
-        Integer userId = authService.getUserIdByUsername(username);
+       
+    	System.out.println("insdie ----------------------------------------");
+    	Integer userId = authService.getUserIdByUsername(username);
         
         if (userId == null) {
             return ResponseEntity.notFound().build();
