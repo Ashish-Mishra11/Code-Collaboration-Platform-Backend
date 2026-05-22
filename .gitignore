@@ -1,0 +1,52 @@
+# ==========================================
+# CodeSync Backend - Git Ignore
+# ==========================================
+
+# Target / Build directories
+**/target/
+target/
+
+# IDE / Editor configuration files
+.idea/
+*.iml
+*.ipr
+*.iws
+.settings/
+.classpath
+.project
+.factorypath
+.springBeans
+.sts4-cache
+.apt_generated
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and databases
+*.log
+logs/
+*.sqlite
+
+# Secrets / Environment variables
+.env
+.env.*
+*.key
+*.pem
+*.p12
+
+# Local JDK / Tooling / Backups
+.jdk/
+.metadata/
+coverage-summary.txt
+README.md.bak
+*.bak
+*.tmp
+*~

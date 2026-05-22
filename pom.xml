@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         Parent inherits from Spring Boot so child modules get
+         dependency management and plugin management for free.
+         ══════════════════════════════════════════════════════════════════ -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.5</version>
+        <relativePath/>
+    </parent>
+
+    <!-- ── Aggregate POM coordinates ──────────────────────────────────── -->
+    <groupId>com.codesync</groupId>
+    <artifactId>codesync-backend</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>CodeSync Backend</name>
+    <description>Parent POM for all CodeSync microservices</description>
+
+    <!-- ── Child modules ──────────────────────────────────────────────── -->
+    <modules>
+        <module>serviceregistry</module>
+        <module>api-gateway</module>
+        <module>auth-service</module>
+        <module>payment-service</module>
+        <module>notification-service</module>
+        <module>collab-service</module>
+        <module>editor-service</module>
+        <module>project-service</module>
+        <module>executionservice</module>
+        <module>versionservice</module>
+    </modules>
+
+    <!-- ── Shared properties ─────────────────────────────────────────── -->
+    <properties>
+        <java.version>21</java.version>
+        <spring-cloud.version>2025.1.1</spring-cloud.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- SonarQube -->
+        <sonar.projectKey>codesync-backend</sonar.projectKey>
+        <sonar.projectName>CodeSync Backend</sonar.projectName>
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+        <!-- Aggregate JaCoCo XML from all modules -->
+        <sonar.coverage.jacoco.xmlReportPaths>
+            ${project.basedir}/../target/site/jacoco-aggregate/jacoco.xml,
+            ${project.basedir}/target/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+        <!-- Minimum line coverage enforced by JaCoCo -->
+        <jacoco.minimum.coverage>0.80</jacoco.minimum.coverage>
+
+        <!-- Exclude generated / infra-only classes from coverage -->
+        <sonar.exclusions>
+            **/config/**,
+            **/configuration/**,
+            **/*Application.java,
+            **/entity/**,
+            **/dto/**,
+            **/exception/**,
+            **/exceptionhandler/**,
+            **/kafka/**,
+            **/controller/**,
+            **/controllers/**,
+            **/filter/**,
+            **/security/**,
+            **/component/**,
+            **/mapper/**,
+            **/util/**,
+            **/feignclient/**,
+            **/repository/**
+        </sonar.exclusions>
+        <sonar.coverage.exclusions>
+            **/config/**,
+            **/configuration/**,
+            **/*Application.java,
+            **/entity/**,
+            **/dto/**,
+            **/exception/**,
+            **/exceptionhandler/**,
+            **/kafka/**,
+            **/controller/**,
+            **/controllers/**,
+            **/filter/**,
+            **/security/**,
+            **/component/**,
+            **/mapper/**,
+            **/util/**,
+            **/feignclient/**,
+            **/repository/**
+        </sonar.coverage.exclusions>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+    </properties>
+
+    <!-- ── Shared dependency management ──────────────────────────────── -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- ── Plugin management shared by all child modules ─────────────── -->
+    <build>
+        <pluginManagement>
+            <plugins>
+
+                <!-- Spring Boot Maven Plugin -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <configuration>
+                        <excludes>
+                            <exclude>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                            </exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+
+                <!-- Compiler with Lombok annotation processor -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+
+                <!-- Surefire (JUnit 5) -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <useModulePath>false</useModulePath>
+                        <!-- Pass JaCoCo agent arg so coverage is recorded -->
+                        <argLine>${argLine}</argLine>
+                        <includes>
+                            <include>**/*Test.java</include>
+                            <include>**/*Tests.java</include>
+                            <include>**/*Spec.java</include>
+                        </includes>
+                    </configuration>
+                </plugin>
+
+                <!-- JaCoCo – per-module report + enforcement -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.12</version>
+                    <configuration>
+                        <excludes>
+                            <exclude>**/config/**</exclude>
+                            <exclude>**/configuration/**</exclude>
+                            <exclude>**/*Application.class</exclude>
+                            <exclude>**/entity/**</exclude>
+                            <exclude>**/dto/**</exclude>
+                            <exclude>**/exception/**</exclude>
+                            <exclude>**/exceptionhandler/**</exclude>
+                            <exclude>**/kafka/**</exclude>
+                            <exclude>**/controller/**</exclude>
+                            <exclude>**/controllers/**</exclude>
+                            <exclude>**/filter/**</exclude>
+                            <exclude>**/security/**</exclude>
+                            <exclude>**/component/**</exclude>
+                            <exclude>**/mapper/**</exclude>
+                            <exclude>**/util/**</exclude>
+                            <exclude>**/feignclient/**</exclude>
+                            <exclude>**/repository/**</exclude>
+                        </excludes>
+                    </configuration>
+                    <executions>
+                        <!-- 1) Prepare JaCoCo agent before tests -->
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals><goal>prepare-agent</goal></goals>
+                        </execution>
+                        <!-- 2) Per-module XML report (used by SonarQube) -->
+                        <execution>
+                            <id>report</id>
+                            <phase>verify</phase>
+                            <goals><goal>report</goal></goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- SonarQube Maven Plugin -->
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>4.0.0.4121</version>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+
+        <!-- Apply JaCoCo to ALL child modules automatically -->
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- ── SonarQube profile ─────────────────────────────────────────── -->
+    <profiles>
+        <profile>
+            <id>sonar</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <sonar.host.url>http://localhost:9000</sonar.host.url>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonarsource.scanner.maven</groupId>
+                        <artifactId>sonar-maven-plugin</artifactId>
+                        <version>4.0.0.4121</version>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>
